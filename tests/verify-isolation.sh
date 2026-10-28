@@ -1,10 +1,10 @@
 #!/bin/bash
 # ==============================================================================
-# Phase 3: Automated Firewall Isolation Verification Test
+# Phase 4: Automated DMZ & Firewall Isolation Verification Test Suite
 # Project: network-architecture-lab
 # ==============================================================================
 
-echo "🔍 Starting automated network isolation tests..."
+echo "🔍 Starting automated tri-subnet isolation tests..."
 echo "--------------------------------------------------"
 
 # 1. Test Gateway Reachability
@@ -17,19 +17,29 @@ fi
 
 echo ""
 
-# 2. Test Firewall Security Isolation
-echo "🛡️ Test 2: Simulating unauthorized crossover connection request..."
-echo "👉 Attempting to connect from public switch interface to private network..."
-
-# We use the 'nc' (netcat) utility to attempt to open a TCP port connection across the boundary
+# 2. Test Firewall Security Isolation (Public to Private)
+echo "🛡️ Test 2: Simulating unauthorized crossover from Public Subnet..."
 if nc -z -w 3 -I public-br 10.0.2.1 80 > /dev/null 2>&1; then
-    echo "🚨 SECURITY BREACH: Public interface successfully bypassed the firewall!"
-    echo "❌ TEST FAILED: The private subnet is exposed."
+    echo "🚨 SECURITY BREACH: Public interface bypassed the firewall!"
+    echo "❌ TEST FAILED: Private zone is exposed."
     exit 1
 else
-    echo "🔒 FIREWALL SECURE: Connection blocked cleanly by kernel isolation policy."
-    echo "🟢 TEST PASSED: Network isolation is operating exactly as designed!"
+    echo "🔒 FIREWALL SECURE: Connection from public-br blocked cleanly by isolation policy."
+fi
+
+echo ""
+
+# 3. Test Firewall Security Isolation (DMZ to Private)
+echo "🔒 Test 3: Simulating unauthorized crossover from DMZ Subnet..."
+echo "👉 Attempting to connect from DMZ switch interface to private network..."
+if nc -z -w 3 -I dmz-br 10.0.2.1 80 > /dev/null 2>&1; then
+    echo "🚨 SECURITY BREACH: DMZ interface broke out and reached the private zone!"
+    echo "❌ TEST FAILED: The private database subnet is exposed to the DMZ."
+    exit 1
+else
+    echo "🔒 FIREWALL SECURE: Connection from dmz-br blocked cleanly by kernel isolation policy."
+    echo "🟢 TEST PASSED: DMZ segmentation is operating exactly as designed!"
 fi
 
 echo "--------------------------------------------------"
-echo "✅ Verification complete."
+echo "✅ Tri-Subnet verification complete."
